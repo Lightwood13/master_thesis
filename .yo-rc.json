@@ -1,0 +1,58 @@
+{
+  "generator-jhipster": {
+    "applicationType": "monolith",
+    "authenticationType": "jwt",
+    "baseName": "Thesis",
+    "blueprints": [
+      {
+        "name": "generator-jhipster-kotlin",
+        "version": "1.16.0"
+      }
+    ],
+    "buildTool": "gradle",
+    "cacheProvider": "ehcache",
+    "clientFramework": "react",
+    "clientPackageManager": "npm",
+    "clientTheme": "none",
+    "clientThemeVariant": "",
+    "creationTimestamp": 1711318949394,
+    "databaseType": "sql",
+    "devDatabaseType": "postgresql",
+    "devServerPort": 9060,
+    "dtoSuffix": "DTO",
+    "enableGradleEnterprise": false,
+    "enableHibernateCache": true,
+    "enableSwaggerCodegen": false,
+    "enableTranslation": true,
+    "entitySuffix": "",
+    "jhiPrefix": "jhi",
+    "jhipsterVersion": "7.9.3",
+    "jwtSecretKey": "OWFkZDIzYWYyYWFkZGE3MjM2YjNiNmUxYWQ4ZjM5MzZkOGY4ZDliMzJlOWFkNjhhY2U1NjZmYTNlZWExYTFlZjlhZTlhMzdiMzJiYWE0YTg3MjI2MmEzNWI4Mjg3OGEzYjI5MTIzZDY1OTdiYzQ1ODVhMmU3MGMyNDdiYTQyMzk=",
+    "languages": ["en", "ua"],
+    "messageBroker": "kafka",
+    "microfrontend": false,
+    "microfrontends": [],
+    "nativeLanguage": "en",
+    "otherModules": [
+      {
+        "name": "generator-jhipster-kotlin",
+        "version": "1.16.0"
+      }
+    ],
+    "packageName": "org.kry.thesis",
+    "pages": [],
+    "prodDatabaseType": "postgresql",
+    "reactive": false,
+    "searchEngine": false,
+    "serverPort": "8080",
+    "serverSideOptions": ["websocket:spring-websocket", "messageBroker:kafka"],
+    "serviceDiscoveryType": "no",
+    "skipCheckLengthOfIdentifier": false,
+    "skipClient": false,
+    "skipFakeData": false,
+    "skipUserManagement": false,
+    "testFrameworks": [],
+    "websocket": "spring-websocket",
+    "withAdminUi": true
+  }
+}
