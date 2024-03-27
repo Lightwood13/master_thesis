@@ -229,3 +229,12 @@ jhipster:
 # ===================================================================
 
 # application:
+
+verneMQ:
+  address: 'localhost:1883'
+
+influxdb:
+  address: 'localhost:8086'
+  token: 'token'
+  org: 'kry'
+  bucket: 'thesis'

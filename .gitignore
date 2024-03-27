@@ -157,3 +157,4 @@ Desktop.ini
 ######################
 /coverage/
 /.nyc_output/
+/src/main/docker/influxdb/
