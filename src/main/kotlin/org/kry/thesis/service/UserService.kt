@@ -35,6 +35,9 @@ class UserService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    fun getCurrentUser(): User =
+        userRepository.findCurrentUser() ?: throw RuntimeException("User not found")
+
     fun activateRegistration(key: String): Optional<User> {
         log.debug("Activating user for activation key $key")
         return userRepository.findOneByActivationKey(key)

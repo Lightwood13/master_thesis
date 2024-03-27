@@ -29,6 +29,8 @@ export const Home = () => {
                 You are logged in as user {account.login}.
               </Translate>
             </Alert>
+
+            <Link to="/heater-list">Heater list</Link>
           </div>
         ) : (
           <div>
