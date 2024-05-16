@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from 'app/config/store';
 export const UserManagementDetail = () => {
   const dispatch = useAppDispatch();
 
-  const { login } = useParams<'login'>();
+  const { login } = useParams<'login'>() as { login: string };
 
   useEffect(() => {
     dispatch(getUser(login));

@@ -11,7 +11,7 @@ export const UserManagementDeleteDialog = () => {
   const dispatch = useAppDispatch();
 
   const navigate = useNavigate();
-  const { login } = useParams<'login'>();
+  const { login } = useParams<'login'>() as { login: string };
 
   useEffect(() => {
     dispatch(getUser(login));
@@ -25,7 +25,9 @@ export const UserManagementDeleteDialog = () => {
   const user = useAppSelector(state => state.userManagement.user);
 
   const confirmDelete = event => {
-    dispatch(deleteUser(user.login));
+    if (user.login !== undefined) {
+      dispatch(deleteUser(user.login));
+    }
     handleClose(event);
   };
 

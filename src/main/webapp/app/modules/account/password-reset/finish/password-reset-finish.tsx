@@ -14,6 +14,10 @@ export const PasswordResetFinishPage = () => {
   const [searchParams] = useSearchParams();
   const key = searchParams.get('key');
 
+  if (key === null) {
+    return <div></div>;
+  }
+
   const [password, setPassword] = useState('');
 
   useEffect(
@@ -29,7 +33,11 @@ export const PasswordResetFinishPage = () => {
 
   const getResetForm = () => {
     return (
-      <ValidatedForm onSubmit={handleValidSubmit}>
+      <ValidatedForm
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        onSubmit={handleValidSubmit}
+      >
         <ValidatedField
           name="newPassword"
           label={translate('global.form.newpassword.label')}

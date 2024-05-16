@@ -48,7 +48,12 @@ export const PasswordPage = () => {
               Password for {account.login}
             </Translate>
           </h2>
-          <ValidatedForm id="password-form" onSubmit={handleValidSubmit}>
+          <ValidatedForm
+            id="password-form"
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            onSubmit={handleValidSubmit}
+          >
             <ValidatedField
               name="currentPassword"
               label={translate('global.form.currentpassword.label')}

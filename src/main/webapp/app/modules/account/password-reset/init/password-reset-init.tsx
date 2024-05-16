@@ -40,7 +40,11 @@ export const PasswordResetInit = () => {
               <Translate contentKey="reset.request.messages.info">Enter the email address you used to register</Translate>
             </p>
           </Alert>
-          <ValidatedForm onSubmit={handleValidSubmit}>
+          <ValidatedForm
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            onSubmit={handleValidSubmit}
+          >
             <ValidatedField
               name="email"
               label={translate('global.form.email.label')}

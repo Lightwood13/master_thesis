@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface HeaterRepository : JpaRepository<Heater, Long> {
     fun getHeatersByOwnerId(ownerId: Long): List<Heater>
+    fun findBySerial(serial: String): Heater?
 }

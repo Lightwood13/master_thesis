@@ -1,6 +1,9 @@
 // Override Boostrap variables
 // Import Bootstrap source files from node_modules
 @import '~bootstrap/scss/bootstrap';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 body {
   background: #fafafa;
   margin: 0;

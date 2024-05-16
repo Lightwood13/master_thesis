@@ -6,10 +6,10 @@ import { TranslatorContext } from 'react-jhipster';
 
 const initialState = {
   currentLocale: '',
-  sourcePrefixes: [],
+  sourcePrefixes: [] as string[],
   lastChange: TranslatorContext.context.lastChange,
-  loadedKeys: [],
-  loadedLocales: [],
+  loadedKeys: [] as string[],
+  loadedLocales: [] as string[],
 };
 
 export type LocaleState = Readonly<typeof initialState>;

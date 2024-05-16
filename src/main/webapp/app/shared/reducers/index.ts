@@ -13,10 +13,11 @@ import password from 'app/modules/account/password/password.reducer';
 import settings from 'app/modules/account/settings/settings.reducer';
 import passwordReset from 'app/modules/account/password-reset/password-reset.reducer';
 import entitiesReducers from 'app/entities/reducers';
+import heater from 'app/modules/heater/heater.reducer';
 import heaterList from 'app/modules/heater-list/heater-list.reducer';
 /* jhipster-needle-add-reducer-import - JHipster will add reducer here */
 
-const rootReducer: ReducersMapObject = {
+const rootReducer = {
   authentication,
   locale,
   applicationProfile,
@@ -28,8 +29,9 @@ const rootReducer: ReducersMapObject = {
   password,
   settings,
   loadingBar,
+  heater,
   heaterList,
-  /* jhipster-needle-add-reducer-combine - JHipster will add reducer here */
+  // /* jhipster-needle-add-reducer-combine - JHipster will add reducer here */
   ...entitiesReducers,
 };
 

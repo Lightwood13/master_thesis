@@ -15,8 +15,8 @@ export const initialState = {
   loginError: false, // Errors returned from server side
   showModalLogin: false,
   account: {} as any,
-  errorMessage: null as unknown as string, // Errors returned from server side
-  redirectMessage: null as unknown as string,
+  errorMessage: null as unknown as string | null | undefined, // Errors returned from server side
+  redirectMessage: null as unknown as string | null,
   sessionHasBeenFetched: false,
   logoutUrl: null as unknown as string,
 };

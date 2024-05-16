@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { Card } from 'reactstrap';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+import { Chart, registerables } from 'chart.js';
 
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 import { getSession } from 'app/shared/reducers/authentication';
@@ -18,7 +19,9 @@ import ErrorBoundary from 'app/shared/error/error-boundary';
 import { AUTHORITIES } from 'app/config/constants';
 import AppRoutes from 'app/routes';
 
-const baseHref = document.querySelector('base').getAttribute('href').replace(/\/$/, '');
+Chart.register(...registerables);
+
+const baseHref = document.querySelector('base')!.getAttribute('href')!.replace(/\/$/, '');
 
 export const App = () => {
   const dispatch = useAppDispatch();
@@ -51,11 +54,11 @@ export const App = () => {
           />
         </ErrorBoundary>
         <div className="container-fluid view-container" id="app-view-container">
-          <Card className="jh-card">
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-          </Card>
+          {/* <Card className="jh-card"> */}
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
+          {/* </Card> */}
           <Footer />
         </div>
       </div>

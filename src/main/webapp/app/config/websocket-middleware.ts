@@ -1,15 +1,15 @@
 import SockJS from 'sockjs-client';
 
-import Stomp from 'webstomp-client';
+import Stomp, { Client, Subscription } from 'webstomp-client';
 import { Observable } from 'rxjs';
 import { Storage } from 'react-jhipster';
 
 import { websocketActivityMessage } from 'app/modules/administration/administration.reducer';
 import { getAccount, logoutSession } from 'app/shared/reducers/authentication';
 
-let stompClient = null;
+let stompClient: Client | null = null;
 
-let subscriber = null;
+let subscriber: Subscription | null | undefined = null;
 let connection: Promise<any>;
 let connectedPromise: any = null;
 let listener: Observable<any>;
@@ -35,7 +35,7 @@ export const sendActivity = (page: string) => {
 
 const subscribe = () => {
   connection.then(() => {
-    subscriber = stompClient.subscribe('/topic/tracker', data => {
+    subscriber = stompClient?.subscribe('/topic/tracker', data => {
       listenerObserver.next(JSON.parse(data.body));
     });
   });
@@ -51,7 +51,7 @@ const connect = () => {
 
   // building absolute path so that websocket doesn't fail when deploying with a context path
   const loc = window.location;
-  const baseHref = document.querySelector('base').getAttribute('href').replace(/\/$/, '');
+  const baseHref = document.querySelector('base')!.getAttribute('href')!.replace(/\/$/, '');
 
   const headers = {};
   let url = '//' + loc.host + baseHref + '/websocket/tracker';
@@ -83,9 +83,7 @@ const disconnect = () => {
 const receive = () => listener;
 
 const unsubscribe = () => {
-  if (subscriber !== null) {
-    subscriber.unsubscribe();
-  }
+  subscriber?.unsubscribe();
   listener = createListener();
 };
 

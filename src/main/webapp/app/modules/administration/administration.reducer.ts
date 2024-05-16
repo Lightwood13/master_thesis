@@ -6,7 +6,7 @@ import { AppThunk } from 'app/config/store';
 
 const initialState = {
   loading: false,
-  errorMessage: null,
+  errorMessage: null as string | null | undefined,
   logs: {
     loggers: [] as any[],
   },
@@ -18,7 +18,7 @@ const initialState = {
     env: {} as any,
   },
   tracker: {
-    activities: [],
+    activities: [] as { id: number; userLogin: string; page: string; sessionId: string; ipAddress: string; time: number }[],
   },
   totalItems: 0,
 };

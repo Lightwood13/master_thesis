@@ -11,8 +11,10 @@ export interface ILoginModalProps {
   handleClose: () => void;
 }
 
+type FormValues = { username: string; password: string; rememberMe: boolean };
+
 const LoginModal = (props: ILoginModalProps) => {
-  const login = ({ username, password, rememberMe }) => {
+  const login = ({ username, password, rememberMe }: FormValues) => {
     props.handleLogin(username, password, rememberMe);
   };
 
@@ -20,7 +22,7 @@ const LoginModal = (props: ILoginModalProps) => {
     handleSubmit,
     register,
     formState: { errors, touchedFields },
-  } = useForm({ mode: 'onTouched' });
+  } = useForm<FormValues>({ mode: 'onTouched' });
 
   const { loginError, handleClose } = props;
 
@@ -54,6 +56,8 @@ const LoginModal = (props: ILoginModalProps) => {
                 autoFocus
                 data-cy="username"
                 validate={{ required: 'Username cannot be empty!' }}
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 register={register}
                 error={errors.username}
                 isTouched={touchedFields.username}
@@ -66,6 +70,8 @@ const LoginModal = (props: ILoginModalProps) => {
                 required
                 data-cy="password"
                 validate={{ required: 'Password cannot be empty!' }}
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 register={register}
                 error={errors.password}
                 isTouched={touchedFields.password}
@@ -76,6 +82,8 @@ const LoginModal = (props: ILoginModalProps) => {
                 check
                 label={translate('login.form.rememberme')}
                 value={true}
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 register={register}
               />
             </Col>

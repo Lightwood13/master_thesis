@@ -13,9 +13,6 @@ import javax.persistence.SequenceGenerator
 import javax.persistence.Table
 import javax.validation.constraints.NotNull
 
-/**
- * A user.
- */
 @Entity
 @Table(name = "heater")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

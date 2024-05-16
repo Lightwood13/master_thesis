@@ -6,7 +6,7 @@ import { IQueryParams, serializeAxiosError } from 'app/shared/reducers/reducer.u
 
 const initialState = {
   loading: false,
-  errorMessage: null,
+  errorMessage: null as string | null | undefined,
   users: [] as ReadonlyArray<IUser>,
   authorities: [] as any[],
   user: defaultValue,

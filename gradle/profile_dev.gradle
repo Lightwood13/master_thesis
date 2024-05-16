@@ -39,6 +39,12 @@ task webapp(type: NpmTask) {
     inputs.files("tsconfig.json")
         .withPropertyName("tsconfig")
         .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files("postcss.config.js")
+        .withPropertyName("postcss-config")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files("tailwind.config.js")
+        .withPropertyName("tailwind-config")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 
     def webpackDevFiles = fileTree("webpack/")
     webpackDevFiles.exclude("webpack.prod.js")

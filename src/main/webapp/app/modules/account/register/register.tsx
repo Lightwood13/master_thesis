@@ -45,7 +45,12 @@ export const RegisterPage = () => {
       </Row>
       <Row className="justify-content-center">
         <Col md="8">
-          <ValidatedForm id="register-form" onSubmit={handleValidSubmit}>
+          <ValidatedForm
+            id="register-form"
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            onSubmit={handleValidSubmit}
+          >
             <ValidatedField
               name="username"
               label={translate('global.form.username.label')}

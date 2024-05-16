@@ -1,5 +1,6 @@
 package org.kry.thesis.service
 
+import io.undertow.util.StatusCodes.NOT_FOUND
 import org.kry.thesis.config.DEFAULT_LANGUAGE
 import org.kry.thesis.domain.User
 import org.kry.thesis.repository.AuthorityRepository
@@ -12,10 +13,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import tech.jhipster.security.RandomUtil
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -36,7 +39,7 @@ class UserService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun getCurrentUser(): User =
-        userRepository.findCurrentUser() ?: throw RuntimeException("User not found")
+        userRepository.findCurrentUser() ?: throw UserNotFoundException()
 
     fun activateRegistration(key: String): Optional<User> {
         log.debug("Activating user for activation key $key")
@@ -286,3 +289,5 @@ class UserService(
         }
     }
 }
+
+class UserNotFoundException : ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
