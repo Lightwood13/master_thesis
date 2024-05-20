@@ -15,6 +15,9 @@ class StatisticsService(
 ) {
     private val log = LoggerFactory.getLogger(StatisticsService::class.java)
 
+    fun calculateLastWeekConsumption(target: Heater): Float? =
+        influxDBService.calculateLastWeekConsumption(target)
+
     fun calculateStatistics(
         target: Heater,
         fields: Set<StatisticsField>,

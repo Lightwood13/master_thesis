@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet author="viktor" id="1-1">
+        <createTable tableName="heater">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="heater_pkey"/>
+            </column>
+            <column name="serial" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="power" type="REAL">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="owner_id"
+            baseTableName="heater"
+            constraintName="fk_heater_owner_id"
+            referencedColumnNames="id"
+            referencedTableName="jhi_user"
+            onDelete="SET NULL"
+        />
+    </changeSet>
+
+</databaseChangeLog>

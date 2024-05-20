@@ -6,26 +6,26 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <changeSet author="viktor" id="20240327232000-1">
-        <createTable tableName="heater">
+    <changeSet author="viktor" id="2-1">
+        <createTable tableName="latest_metrics">
             <column name="id" type="BIGINT">
-                <constraints primaryKey="true" primaryKeyName="heater_pkey"/>
+                <constraints primaryKey="true" primaryKeyName="latest_metrics_pkey"/>
             </column>
-            <column name="serial" type="VARCHAR(255)">
+            <column name="heater_id" type="BIGINT">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="owner_id" type="BIGINT">
-                <constraints nullable="true"/>
+            <column name="metrics" type="VARCHAR(255)">
+                <constraints nullable="false"/>
             </column>
         </createTable>
 
         <addForeignKeyConstraint
-            baseColumnNames="owner_id"
-            baseTableName="heater"
-            constraintName="fk_heater_owner_id"
+            baseColumnNames="heater_id"
+            baseTableName="latest_metrics"
+            constraintName="fk_metrics_heater_id"
             referencedColumnNames="id"
-            referencedTableName="jhi_user"
-            onDelete="SET NULL"
+            referencedTableName="heater"
+            onDelete="CASCADE"
         />
     </changeSet>
 
