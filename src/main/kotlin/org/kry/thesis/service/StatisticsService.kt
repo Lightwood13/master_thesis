@@ -160,7 +160,9 @@ class StatisticsService(
 
 enum class StatisticsField {
     ELECTRIC_CONSUMPTION,
-    ROOM_TEMPERATURE
+    ROOM_TEMPERATURE,
+    OUTSIDE_TEMPERATURE,
+    ELECTRICITY_PRICE
 }
 
 enum class StatisticsAggregationPeriod {

@@ -2,6 +2,7 @@ package org.kry.thesis.web.rest
 
 import org.kry.thesis.domain.Heater
 import org.kry.thesis.domain.Model
+import org.kry.thesis.service.PriceService
 import org.kry.thesis.service.facade.HeaterDTO
 import org.kry.thesis.service.facade.HeaterFacade
 import org.kry.thesis.service.facade.NewModelDTO
@@ -15,7 +16,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api")
 class HeaterResource(
-    private val heaterFacade: HeaterFacade
+    private val heaterFacade: HeaterFacade,
+    private val priceService: PriceService
 ) {
     @GetMapping("/heaters")
     fun getCurrentUserHeaters(): List<Heater> =

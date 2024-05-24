@@ -4,8 +4,11 @@ import { DateTime } from 'luxon';
 import { IRootState } from 'app/config/store';
 import { DateRangePickerValue } from '@tremor/react';
 
+export type StatisticsType = 'temperature' | 'consumption' | 'price';
+
 const initialState = {
   heater: null as Heater | null,
+  statisticsType: 'temperature' as StatisticsType,
   statisticsDateRange: {
     from: DateTime.now().startOf('day').minus({ days: 7 }),
     to: DateTime.now().startOf('day'),
@@ -73,17 +76,9 @@ export type StatisticsRequest = {
   readonly timeZone: string;
 };
 
-export enum StatisticsField {
-  ELECTRIC_CONSUMPTION = 'ELECTRIC_CONSUMPTION',
-  ROOM_TEMPERATURE = 'ROOM_TEMPERATURE',
-}
+export type StatisticsField = 'ROOM_TEMPERATURE' | 'OUTSIDE_TEMPERATURE' | 'ELECTRIC_CONSUMPTION' | 'ELECTRICITY_PRICE';
 
-export enum StatisticsAggregationPeriod {
-  HOUR = 'HOUR',
-  DAY = 'DAY',
-  WEEK = 'WEEK',
-  MONTH = 'MONTH',
-}
+export type StatisticsAggregationPeriod = 'HOUR' | 'DAY' | 'WEEK' | 'MONTH';
 
 function heaterUrl(serial: string): string {
   return `/api/heaters/${serial}`;
@@ -128,17 +123,33 @@ export const updateStatistics =
     let aggregationPeriod: StatisticsAggregationPeriod;
     switch (state.heater.statisticsDateRange.selectValue) {
       case 'w':
-        aggregationPeriod = StatisticsAggregationPeriod.HOUR;
+        aggregationPeriod = 'HOUR';
         break;
       default:
-        aggregationPeriod = StatisticsAggregationPeriod.HOUR;
+        aggregationPeriod = 'HOUR';
+        break;
+    }
+
+    let fields: StatisticsField[];
+    switch (state.heater.statisticsType) {
+      case 'temperature':
+        fields = ['ROOM_TEMPERATURE'];
+        break;
+      case 'consumption':
+        fields = ['ELECTRIC_CONSUMPTION'];
+        break;
+      case 'price':
+        fields = ['ELECTRICITY_PRICE'];
+        break;
+      default:
+        fields = [];
         break;
     }
 
     dispatch(
       fetchStatistics({
         serial,
-        fields: [StatisticsField.ROOM_TEMPERATURE],
+        fields,
         startTime,
         endTime: endTime.plus({ days: 1 }),
         aggregationPeriod,
@@ -151,6 +162,9 @@ export const HeaterSlice = createSlice({
   name: 'heater',
   initialState: initialState as HeaterState,
   reducers: {
+    setStatisticsType(state, action) {
+      state.statisticsType = action.payload;
+    },
     setStatisticsDateRange(state, action) {
       const newRange = action.payload as DateRangePickerValue;
       state.statisticsDateRange = {
@@ -173,6 +187,6 @@ export const HeaterSlice = createSlice({
   },
 });
 
-export const { setStatisticsDateRange } = HeaterSlice.actions;
+export const { setStatisticsType, setStatisticsDateRange } = HeaterSlice.actions;
 
 export default HeaterSlice.reducer;

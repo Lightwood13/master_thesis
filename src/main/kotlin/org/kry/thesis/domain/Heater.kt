@@ -64,7 +64,10 @@ class Heater(
     var activeModel: Model?,
 
     @OneToMany(mappedBy = "heater", fetch = FetchType.EAGER)
-    var models: MutableList<Model>
+    var models: MutableList<Model>,
+
+    @OneToOne
+    var location: Location?
 )
 
 enum class Schedule {

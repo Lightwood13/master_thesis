@@ -3,10 +3,13 @@ package org.kry.thesis.service.influxdb
 import com.influxdb.client.InfluxDBClient
 import com.influxdb.client.domain.WritePrecision
 import com.influxdb.query.FluxRecord
+import org.kry.thesis.domain.Country
 import org.kry.thesis.domain.Heater
+import org.kry.thesis.domain.Location
 import org.kry.thesis.service.StatisticsAggregationPeriod
 import org.kry.thesis.service.StatisticsDataPoint
 import org.kry.thesis.service.StatisticsField
+import org.kry.thesis.service.StatisticsField.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -24,12 +27,38 @@ class InfluxDBService(
     fun saveMetrics(serial: String, metricsWithTimestamp: String) {
         writeApi.writeRecord(
             WritePrecision.MS,
-            assembleInfluxDBMeasurement(serial, metricsWithTimestamp)
+            assembleHeaterSensorsMeasurement(serial, metricsWithTimestamp)
         )
     }
 
-    fun assembleInfluxDBMeasurement(serial: String, metricsWithTimestamp: String): String =
+    fun saveOutsideTemperature(location: Location, temperatures: List<Float>, timestamps: List<Instant>) {
+        assert(temperatures.size == timestamps.size)
+        temperatures.zip(timestamps).map { (temperature, timestamp) ->
+            writeApi.writeRecord(
+                WritePrecision.MS,
+                assembleOutsideTemperatureMeasurement(location.id!!, temperature, timestamp)
+            )
+        }
+    }
+
+    fun savePrices(country: Country, prices: List<Float>, timestamps: List<Instant>) {
+        assert(prices.size == timestamps.size)
+        prices.zip(timestamps).map { (price, timestamp) ->
+            writeApi.writeRecord(
+                WritePrecision.MS,
+                assemblePriceMeasurement(country.id!!, price, timestamp)
+            )
+        }
+    }
+
+    private fun assembleHeaterSensorsMeasurement(serial: String, metricsWithTimestamp: String): String =
         "$HEATER_SENSORS_MEASUREMENT,serial=$serial $metricsWithTimestamp"
+
+    private fun assembleOutsideTemperatureMeasurement(locationId: Long, temperature: Float, timestamp: Instant): String =
+        "$OUTSIDE_TEMPERATURE_MEASUREMENT,loc_id=$locationId temp=$temperature ${timestamp.toEpochMilli()}"
+
+    private fun assemblePriceMeasurement(countryId: Long, price: Float, timestamp: Instant): String =
+        "$PRICE_MEASUREMENT,country_id=$countryId price=$price ${timestamp.toEpochMilli()}"
 
     fun calculateLastWeekConsumption(target: Heater): Float? =
         safeInfluxDBQuery(
@@ -37,7 +66,7 @@ class InfluxDBService(
                 interval = "1w",
                 serial = target.serial,
                 measurement = HEATER_SENSORS_MEASUREMENT,
-                field = StatisticsField.ELECTRIC_CONSUMPTION,
+                field = ELECTRIC_CONSUMPTION,
                 aggregationFunction = InfluxDBAggregationFunction.SPREAD
             )
         ).firstOrNull()?.let { it.tryExtractSerialAndValue()?.second }
@@ -53,8 +82,9 @@ class InfluxDBService(
         val query = windowAggregationQuery(
             startTime = startTime,
             endTime = endTime,
-            serial = target.serial,
-            measurement = HEATER_SENSORS_MEASUREMENT,
+            idField = field.idField(),
+            idValue = field.idValue(target),
+            measurement = field.toMeasurement(),
             field = field.toInfluxFieldName(),
             windowPeriod = aggregationPeriod.toInfluxPeriod(),
             windowOffset = aggregationPeriod.influxWindowOffset(),
@@ -96,7 +126,8 @@ private fun fieldAggregationQuery(
 private fun windowAggregationQuery(
     startTime: Instant,
     endTime: Instant,
-    serial: String,
+    idField: String,
+    idValue: String,
     measurement: String,
     field: String,
     windowPeriod: String,
@@ -112,7 +143,7 @@ private fun windowAggregationQuery(
         from(bucket: "$BUCKET")
             |> range(start: $startTime, stop: $endTime)
             |> filter(fn: (r) => r._measurement == "$measurement" and r._field == "$field")
-            |> filter(fn: (r) => r.serial == "$serial")
+            |> filter(fn: (r) => r.$idField == "$idValue")
             |> window(every: $windowPeriod$windowOffsetParameter)
             |> ${aggregationFunction.value}()
             |> group(columns: ["serial", "_start", "_stop"])
@@ -152,16 +183,39 @@ private enum class InfluxDBAggregationFunction(val value: String) {
     SPREAD("spread")
 }
 
+private fun StatisticsField.toMeasurement(): String =
+    when (this) {
+        ELECTRIC_CONSUMPTION, ROOM_TEMPERATURE -> HEATER_SENSORS_MEASUREMENT
+        OUTSIDE_TEMPERATURE -> OUTSIDE_TEMPERATURE_MEASUREMENT
+        ELECTRICITY_PRICE -> PRICE_MEASUREMENT
+    }
+
+private fun StatisticsField.idField(): String =
+    when (this) {
+        ELECTRIC_CONSUMPTION, ROOM_TEMPERATURE -> "serial"
+        OUTSIDE_TEMPERATURE -> "loc_id"
+        ELECTRICITY_PRICE -> "country_id"
+    }
+
+private fun StatisticsField.idValue(heater: Heater): String =
+    when (this) {
+        ELECTRIC_CONSUMPTION, ROOM_TEMPERATURE -> heater.serial
+        OUTSIDE_TEMPERATURE -> heater.location?.id?.toString() ?: "unknown"
+        ELECTRICITY_PRICE -> heater.location?.country?.id?.toString() ?: "unknown"
+    }
+
 private fun StatisticsField.toInfluxFieldName(): String =
     when (this) {
-        StatisticsField.ELECTRIC_CONSUMPTION -> ELECTRIC_CONSUMPTION_FIELD
-        StatisticsField.ROOM_TEMPERATURE -> ROOM_TEMPERATURE_FIELD
+        ELECTRIC_CONSUMPTION -> ELECTRIC_CONSUMPTION_FIELD
+        ROOM_TEMPERATURE -> ROOM_TEMPERATURE_FIELD
+        OUTSIDE_TEMPERATURE -> OUTSIDE_TEMPERATURE_FIELD
+        ELECTRICITY_PRICE -> PRICE_FIELD
     }
 
 private fun StatisticsField.aggregationFunction(): InfluxDBAggregationFunction =
     when (this) {
-        StatisticsField.ELECTRIC_CONSUMPTION -> InfluxDBAggregationFunction.SPREAD
-        StatisticsField.ROOM_TEMPERATURE -> InfluxDBAggregationFunction.MEAN
+        ELECTRIC_CONSUMPTION -> InfluxDBAggregationFunction.SPREAD
+        ROOM_TEMPERATURE, OUTSIDE_TEMPERATURE, ELECTRICITY_PRICE -> InfluxDBAggregationFunction.MEAN
     }
 
 private fun StatisticsAggregationPeriod.toInfluxPeriod(): String =
@@ -180,6 +234,10 @@ private fun StatisticsAggregationPeriod.influxWindowOffset(): String? =
 
 private const val BUCKET = "thesis"
 private const val HEATER_SENSORS_MEASUREMENT = "heater-sensors"
+private const val OUTSIDE_TEMPERATURE_MEASUREMENT = "out-temp"
+private const val PRICE_MEASUREMENT = "price"
 
 private const val ELECTRIC_CONSUMPTION_FIELD = "el_co"
 private const val ROOM_TEMPERATURE_FIELD = "room_t"
+private const val OUTSIDE_TEMPERATURE_FIELD = "temp"
+private const val PRICE_FIELD = "price"

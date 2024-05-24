@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet author="viktor" id="add-data">
+        <sql>
+            INSERT INTO country (id, name, code, timezone)
+            VALUES (0, 'Estonia', 'EE', 'Europe/Tallinn');
+
+            INSERT INTO location (id, latitude, longitude, country_id)
+            VALUES (0, 50.4504, 30.52545, 0);
+
+            INSERT INTO heater (id, serial, owner_id, power, schedule, calibration_status, location_id)
+            VALUES (0, 'test_serial', 2, 1000, 'IDLE', 'NOT_CALIBRATED', 0);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

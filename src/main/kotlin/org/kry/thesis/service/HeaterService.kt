@@ -15,6 +15,9 @@ class HeaterService(
 
     fun findBySerial(serial: String): Heater =
         heaterRepository.findBySerial(serial) ?: throw HeaterNotFoundException()
+
+    fun findAll(): List<Heater> =
+        heaterRepository.findAll()
 }
 
 class HeaterNotFoundException : ResponseStatusException(HttpStatus.NOT_FOUND, "Heater not found")

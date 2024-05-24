@@ -19,10 +19,12 @@ import {
   Heater,
   Model,
   setStatisticsDateRange,
+  setStatisticsType,
   startCalibration,
   StatisticsAggregationPeriod,
   StatisticsData,
   StatisticsField,
+  StatisticsType,
   updateStatistics,
 } from 'app/modules/heater/heater.reducer';
 import ModelTable from 'app/modules/heater/table';
@@ -50,18 +52,36 @@ function StatisticsCard({ title, value, icon, color }: { title: string; value: s
 }
 
 export const HeaterPage = () => {
+  const heater = useAppSelector(state => state.heater.heater);
+  const statistics: StatisticsData | null = useAppSelector(state => state.heater.statistics);
+  const dateRange = useAppSelector(state => state.heater.statisticsDateRange);
+  const statisticsType = useAppSelector(state => state.heater.statisticsType);
+
+  const dispatch = useAppDispatch();
+
   const { serial } = useParams<'serial'>() as { serial: string };
   const [activeTab, setActiveTab] = useState(0);
 
   const handleTabChange = (event: SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+    let newStatisticsType: StatisticsType = 'temperature';
+    switch (newValue) {
+      case 0:
+        newStatisticsType = 'temperature';
+        break;
+      case 1:
+        newStatisticsType = 'consumption';
+        break;
+      case 2:
+        newStatisticsType = 'price';
+        break;
+      default:
+        newStatisticsType = 'temperature';
+        break;
+    }
+    dispatch(setStatisticsType(newStatisticsType));
+    dispatch(updateStatistics(serial));
   };
-
-  const heater = useAppSelector(state => state.heater.heater);
-  const statistics: StatisticsData | null = useAppSelector(state => state.heater.statistics);
-  const dateRange = useAppSelector(state => state.heater.statisticsDateRange);
-
-  const dispatch = useAppDispatch();
 
   const setDateRange = (newDateRange: DateRangePickerValue) => {
     dispatch(setStatisticsDateRange(newDateRange));
@@ -94,22 +114,45 @@ export const HeaterPage = () => {
             },
           },
         },
+      },
+    };
+
+    if ('ROOM_TEMPERATURE' in statistics[0].data) {
+      chartOptions.scales = {
+        ...chartOptions.scales,
         y: {
           min: 18,
           max: 24,
         },
-      },
-    };
+      };
+    } else {
+      chartOptions.scales = {
+        ...chartOptions.scales,
+        y: {
+          min: 0,
+        },
+      };
+    }
 
     const chartData: ChartData<'line'> = {
       labels: statistics.map(dataPoint => dataPoint.periodStart),
       datasets: [
         {
           label: 'Room Temperature',
-          data: statistics.map(dataPoint => dataPoint.data[StatisticsField.ROOM_TEMPERATURE]),
+          data: statistics.map(dataPoint => dataPoint.data['ROOM_TEMPERATURE']),
+        },
+        {
+          label: 'Power consumption',
+          data: statistics.map(dataPoint => dataPoint.data['ELECTRIC_CONSUMPTION']),
+        },
+        {
+          label: 'Electricity price',
+          data: statistics.map(dataPoint => dataPoint.data['ELECTRICITY_PRICE']),
         },
       ],
     };
+
+    chartData.datasets = chartData.datasets.filter(dataset => !dataset.data.every(value => value === null || value === undefined));
 
     statisticsElem = (
       <div>
