@@ -20,6 +20,16 @@
             <column name="power" type="REAL">
                 <constraints nullable="true"/>
             </column>
+            <column name="schedule" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calibration_status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calibration_start" type="timestamptz"/>
+            <column name="calibration_end" type="timestamptz"/>
+            <column name="calibration_percentage" type="REAL"/>
+            <column name="active_model_id" type="BIGINT"/>
         </createTable>
 
         <addForeignKeyConstraint

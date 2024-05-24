@@ -2,6 +2,7 @@ package org.kry.thesis.domain
 
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import java.time.Instant
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -10,7 +11,6 @@ import javax.persistence.Id
 import javax.persistence.OneToOne
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
-import javax.validation.constraints.NotNull
 
 @Entity
 @Table(name = "latest_metrics")
@@ -25,7 +25,9 @@ class LatestMetrics(
     @OneToOne
     val heater: Heater? = null,
 
-    @get: NotNull
-    @Column(name = "metrics", nullable = false)
-    var metrics: String? = null
+    @Column(nullable = false)
+    var metrics: String,
+
+    @Column(nullable = false)
+    var timestamp: Instant
 )

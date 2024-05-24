@@ -1,27 +1,26 @@
 import SockJS from 'sockjs-client';
 
 import Stomp, { Client, Subscription } from 'webstomp-client';
-import { Observable } from 'rxjs';
+import { Observable, Subscriber } from 'rxjs';
 import { Storage } from 'react-jhipster';
 
-import { websocketActivityMessage } from 'app/modules/administration/administration.reducer';
+import { Middleware } from 'redux';
+
 import { getAccount, logoutSession } from 'app/shared/reducers/authentication';
+import { updateHeater } from 'app/modules/heater/heater.reducer';
+import { IRootState } from 'app/config/store';
+
+import type {} from 'redux-thunk/extend-redux';
 
 let stompClient: Client | null = null;
 
 let subscriber: Subscription | null | undefined = null;
 let connection: Promise<any>;
 let connectedPromise: any = null;
-let listener: Observable<any>;
-let listenerObserver: any;
+
 let alreadyConnectedOnce = false;
 
 const createConnection = (): Promise<any> => new Promise(resolve => (connectedPromise = resolve));
-
-const createListener = (): Observable<any> =>
-  new Observable(observer => {
-    listenerObserver = observer;
-  });
 
 export const sendActivity = (page: string) => {
   connection?.then(() => {
@@ -33,12 +32,16 @@ export const sendActivity = (page: string) => {
   });
 };
 
-const subscribe = () => {
-  connection.then(() => {
-    subscriber = stompClient?.subscribe('/topic/tracker', data => {
-      listenerObserver.next(JSON.parse(data.body));
-    });
+const subscribe = async (topic: string): Promise<Observable<any>> => {
+  await connection;
+  let listenerObserver: Subscriber<any> | undefined;
+  const listener = new Observable(observer => {
+    listenerObserver = observer;
   });
+  subscriber = stompClient?.subscribe(topic, data => {
+    listenerObserver?.next(JSON.parse(data.body));
+  });
+  return listener;
 };
 
 const connect = () => {
@@ -47,14 +50,13 @@ const connect = () => {
     return;
   }
   connection = createConnection();
-  listener = createListener();
 
   // building absolute path so that websocket doesn't fail when deploying with a context path
   const loc = window.location;
   const baseHref = document.querySelector('base')!.getAttribute('href')!.replace(/\/$/, '');
 
   const headers = {};
-  let url = '//' + loc.host + baseHref + '/websocket/tracker';
+  let url = '//' + loc.host + baseHref + '/websocket';
   const authToken = Storage.local.get('jhi-authenticationToken') || Storage.session.get('jhi-authenticationToken');
   if (authToken) {
     url += '?access_token=' + authToken;
@@ -80,22 +82,20 @@ const disconnect = () => {
   alreadyConnectedOnce = false;
 };
 
-const receive = () => listener;
-
 const unsubscribe = () => {
   subscriber?.unsubscribe();
-  listener = createListener();
 };
 
 export default store => next => action => {
   if (getAccount.fulfilled.match(action)) {
     connect();
     const isAdmin = action.payload.data.authorities.includes('ROLE_ADMIN');
-    if (!alreadyConnectedOnce && isAdmin) {
-      subscribe();
-      receive().subscribe(activity => {
-        return store.dispatch(websocketActivityMessage(activity));
-      });
+    if (!alreadyConnectedOnce) {
+      subscribe('/user/queue/heater').then(listener =>
+        listener.subscribe(serial => {
+          store.dispatch(updateHeater(serial));
+        })
+      );
     }
   } else if (getAccount.rejected.match(action) || action.type === logoutSession().type) {
     unsubscribe();

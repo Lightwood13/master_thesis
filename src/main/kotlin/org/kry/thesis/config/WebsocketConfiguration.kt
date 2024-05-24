@@ -26,7 +26,7 @@ class WebsocketConfiguration(
 ) : WebSocketMessageBrokerConfigurer {
 
     override fun configureMessageBroker(config: MessageBrokerRegistry?) {
-        config!!.enableSimpleBroker("/topic")
+        config!!.enableSimpleBroker("/queue", "/topic")
     }
 
     override fun registerStompEndpoints(registry: StompEndpointRegistry?) {
@@ -35,7 +35,7 @@ class WebsocketConfiguration(
                 .map { origins -> origins.toTypedArray() }
                 .orElse(arrayOfNulls(0))
 
-        registry!!.addEndpoint("/websocket/tracker")
+        registry!!.addEndpoint("/websocket")
             .setHandshakeHandler(defaultHandshakeHandler())
             .setAllowedOrigins(*allowedOrigins)
             .withSockJS()

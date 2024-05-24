@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, ReactElement, useState } from 'react';
 import {
   Button,
   Table,
@@ -16,6 +16,8 @@ import {
   FormGroup,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import { useAppDispatch, useAppSelector } from 'app/config/store';
+import { createNewModel, Model } from 'app/modules/heater/heater.reducer';
 
 const style = {
   position: 'absolute',
@@ -28,34 +30,19 @@ const style = {
   p: 4,
 };
 
-const initialData = [
-  {
-    modelName: 'Test Model',
-    targetTemperature: '21°C',
-    temperatureRange: '19-23°C',
-    dateCreated: '2024-05-16',
-    status: 'Gathering training data',
-    isActive: true,
-  },
-  // {
-  //   modelName: 'Model B',
-  //   targetTemperature: '20°C',
-  //   temperatureRange: '18-22°C',
-  //   dateCreated: '2024-05-03',
-  //   status: 'Inactive',
-  // }
-];
-
 const ModelTable = () => {
-  const [data, setData] = useState(initialData);
   const [open, setOpen] = useState(false);
   const [newModel, setNewModel] = useState({
     modelName: 'Test Model',
     targetTemperature: '21',
     minTemperature: '19',
     maxTemperature: '23',
-    isActive: true,
+    activateImmediately: true,
   });
+
+  const heater = useAppSelector(state => state.heater.heater);
+  const models = useAppSelector(state => state.heater.models);
+  const dispatch = useAppDispatch();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -69,19 +56,33 @@ const ModelTable = () => {
   };
 
   const handleSubmit = () => {
-    // setData([...data, newModel]);
     setNewModel({
-      modelName: '',
-      targetTemperature: '',
-      minTemperature: '',
-      maxTemperature: '',
-      isActive: true,
+      modelName: 'Test Model',
+      targetTemperature: '21',
+      minTemperature: '19',
+      maxTemperature: '23',
+      activateImmediately: true,
     });
+    if (heater) {
+      dispatch(
+        createNewModel({
+          serial: heater.serial,
+          name: newModel.modelName,
+          targetTemperature: parseFloat(newModel.targetTemperature),
+          minTemperature: parseFloat(newModel.minTemperature),
+          maxTemperature: parseFloat(newModel.maxTemperature),
+          activateImmediately: newModel.activateImmediately,
+        })
+      );
+    }
     handleClose();
   };
 
-  return (
-    <div className="p-4">
+  let table: ReactElement;
+  if (models.length === 0) {
+    table = <p>No models created</p>;
+  } else {
+    table = (
       <TableContainer component={Paper}>
         <Table>
           <TableHead className="bg-gray-200">
@@ -95,23 +96,49 @@ const ModelTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((row, index) => (
-              <TableRow key={index} className={`hover:bg-gray-100 ${row.isActive ? 'bg-green-100' : ''}`}>
-                <TableCell>{row.modelName}</TableCell>
-                <TableCell>{row.targetTemperature}</TableCell>
-                <TableCell>{row.temperatureRange}</TableCell>
-                <TableCell>{row.dateCreated}</TableCell>
-                <TableCell>{row.status}</TableCell>
-                <TableCell>{row.isActive ? 'Active' : 'Inactive'}</TableCell>
-              </TableRow>
-            ))}
+            {models.map((model: Model, index) => {
+              const isActive = model.id === heater?.activeModelId;
+              return (
+                <TableRow key={index} className={`hover:bg-gray-100 ${isActive ? 'bg-green-100' : ''}`}>
+                  <TableCell>{model.name}</TableCell>
+                  <TableCell>{model.targetTemperature}°C</TableCell>
+                  <TableCell>
+                    {model.minTemperature}-{model.maxTemperature}°C
+                  </TableCell>
+                  <TableCell>{model.createdOn.toFormat('dd MMM yyyy')}</TableCell>
+                  <TableCell>{model.status}</TableCell>
+                  <TableCell>{isActive ? 'Active' : 'Inactive'}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
+    );
+  }
 
+  let createNewModelButton: ReactElement;
+  if (heater?.calibrationStatus !== 'CALIBRATED') {
+    createNewModelButton = (
+      <div className="space-y-4">
+        <p>To create models please calibrate the heater</p>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen} className="mt-4" disabled>
+          Create new model
+        </Button>
+      </div>
+    );
+  } else {
+    createNewModelButton = (
       <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen} className="mt-4">
         Create new model
       </Button>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      {table}
+      {createNewModelButton}
 
       <Modal open={open} onClose={handleClose}>
         <Box sx={style}>
@@ -149,11 +176,11 @@ const ModelTable = () => {
               control={
                 <Checkbox
                   name="active"
-                  checked={newModel.isActive}
+                  checked={newModel.activateImmediately}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     setNewModel({
                       ...newModel,
-                      isActive: e.target.checked,
+                      activateImmediately: e.target.checked,
                     });
                   }}
                 />
