@@ -11,8 +11,14 @@
             <column name="id" type="BIGINT">
                 <constraints primaryKey="true" primaryKeyName="heater_pkey"/>
             </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="serial" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
             </column>
             <column name="owner_id" type="BIGINT">
                 <constraints nullable="true"/>

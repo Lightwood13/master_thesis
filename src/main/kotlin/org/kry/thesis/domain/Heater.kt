@@ -17,7 +17,6 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.SequenceGenerator
 import javax.persistence.Table
-import javax.validation.constraints.NotNull
 
 @Entity
 @Table(name = "heater")
@@ -29,45 +28,47 @@ class Heater(
     @SequenceGenerator(name = "sequenceGenerator")
     val id: Long? = null,
 
-    @get: NotNull
+    @Column(name = "name", nullable = false)
+    var name: String,
+
     @Column(name = "serial", nullable = false, unique = true)
     var serial: String,
 
-    @get: NotNull
+    @Column(name = "password_hash", nullable = false)
+    val passwordHash: String,
+
     @Column(name = "power", nullable = false)
     val power: Float,
 
     @ManyToOne
     @JsonIgnore
-    val owner: User? = null,
+    var owner: User? = null,
 
-    @get: NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule", nullable = false)
     var schedule: Schedule,
 
-    @get: NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "calibration_status", nullable = false)
     var calibrationStatus: CalibrationStatus,
 
     @Column(name = "calibration_start")
-    var calibrationStart: Instant?,
+    var calibrationStart: Instant? = null,
 
     @Column(name = "calibration_end")
-    var calibrationEnd: Instant?,
+    var calibrationEnd: Instant? = null,
 
     @Column(name = "calibration_percentage")
-    var calibrationPercentage: Float?,
+    var calibrationPercentage: Float? = null,
 
     @OneToOne
-    var activeModel: Model?,
+    var activeModel: Model? = null,
 
     @OneToMany(mappedBy = "heater", fetch = FetchType.EAGER)
-    var models: MutableList<Model>,
+    var models: MutableList<Model> = mutableListOf(),
 
     @OneToOne
-    var location: Location?
+    var location: Location? = null
 )
 
 enum class Schedule {

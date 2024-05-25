@@ -34,5 +34,5 @@ class Location(
     val country: Country,
 
     @Column
-    var lastUpdated: LocalDate?
+    var lastUpdated: LocalDate? = null
 )

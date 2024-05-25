@@ -2,10 +2,13 @@ package org.kry.thesis.web.rest
 
 import org.kry.thesis.domain.Heater
 import org.kry.thesis.domain.Model
-import org.kry.thesis.service.PriceService
+import org.kry.thesis.security.ADMIN
+import org.kry.thesis.service.facade.AddHeaterDTO
 import org.kry.thesis.service.facade.HeaterDTO
 import org.kry.thesis.service.facade.HeaterFacade
+import org.kry.thesis.service.facade.NewHeaterDTO
 import org.kry.thesis.service.facade.NewModelDTO
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,25 +17,33 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/heaters")
 class HeaterResource(
     private val heaterFacade: HeaterFacade,
-    private val priceService: PriceService
 ) {
-    @GetMapping("/heaters")
+    @GetMapping
     fun getCurrentUserHeaters(): List<Heater> =
         heaterFacade.getCurrentUserHeaters()
 
-    @GetMapping("/heaters/{serial}")
+    @GetMapping("/{serial}")
     fun getHeater(@PathVariable serial: String): HeaterDTO =
         heaterFacade.getBySerialForCurrentUser(serial)
 
-    @PostMapping("/heaters/{serial}/start-calibration")
+    @PostMapping
+    @PreAuthorize("hasAuthority(\"$ADMIN\")")
+    fun createHeater(@RequestBody newHeaterDTO: NewHeaterDTO): Unit =
+        heaterFacade.createHeater(newHeaterDTO)
+
+    @PostMapping("/add")
+    fun addHeater(@RequestBody addHeaterDTO: AddHeaterDTO): Unit =
+        heaterFacade.addHeaterToCurrentUser(addHeaterDTO)
+
+    @PostMapping("/{serial}/start-calibration")
     fun startCalibration(@PathVariable serial: String) {
         heaterFacade.startCalibration(serial)
     }
 
-    @GetMapping("/heaters/{serial}/models")
+    @GetMapping("/{serial}/models")
     fun getHeaterModels(@PathVariable serial: String): List<Model> =
         heaterFacade.getHeaterModels(serial)
 

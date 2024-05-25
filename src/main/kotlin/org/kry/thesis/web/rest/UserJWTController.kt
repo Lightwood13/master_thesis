@@ -32,7 +32,7 @@ class UserJWTController(
 
         val authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken)
         SecurityContextHolder.getContext().authentication = authentication
-        val jwt = tokenProvider.createToken(authentication, loginVM.isRememberMe ?: false)
+        val jwt = tokenProvider.createToken(authentication, loginVM.rememberMe ?: false)
         val httpHeaders = HttpHeaders()
         httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer $jwt")
         return ResponseEntity(JWTToken(jwt), httpHeaders, HttpStatus.OK)

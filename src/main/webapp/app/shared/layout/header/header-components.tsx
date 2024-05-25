@@ -12,18 +12,18 @@ export const BrandIcon = props => (
 );
 
 export const Brand = () => (
-  <NavbarBrand tag={Link} to="/" className="brand-logo">
-    <BrandIcon />
+  <NavbarBrand tag={Link} to="/heaters" className="brand-logo">
+    {/* <BrandIcon /> */}
     <span className="brand-title">
-      <Translate contentKey="global.title">Thesis</Translate>
+      <Translate contentKey="global.title">Heating management</Translate>
     </span>
-    <span className="navbar-version">{VERSION}</span>
+    {/* <span className="navbar-version">{VERSION}</span> */}
   </NavbarBrand>
 );
 
 export const Home = () => (
   <NavItem>
-    <NavLink tag={Link} to="/" className="d-flex align-items-center">
+    <NavLink tag={Link} to="/heaters" className="d-flex align-items-center">
       <FontAwesomeIcon icon="home" />
       <span>
         <Translate contentKey="global.menu.home">Home</Translate>

@@ -9,13 +9,19 @@
     <changeSet author="viktor" id="add-data">
         <sql>
             INSERT INTO country (id, name, code, timezone)
-            VALUES (0, 'Estonia', 'EE', 'Europe/Tallinn');
+            VALUES (0, 'Estonia', 'EE', 'Europe/Tallinn'),
+                   (1, 'Latvia', 'LV', 'Europe/Riga'),
+                   (2, 'Lithuania', 'LT', 'Europe/Vilnius'),
+                   (3, 'Germany', 'GER', 'Europe/Berlin'),
+                   (4, 'Netherlands', 'NL', 'Europe/Amsterdam');
 
             INSERT INTO location (id, latitude, longitude, country_id)
             VALUES (0, 50.4504, 30.52545, 0);
 
-            INSERT INTO heater (id, serial, owner_id, power, schedule, calibration_status, location_id)
-            VALUES (0, 'test_serial', 2, 1000, 'IDLE', 'NOT_CALIBRATED', 0);
+            INSERT INTO heater (id, name, serial, password_hash, owner_id, power, schedule, calibration_status,
+                                location_id)
+            VALUES (0, 'Room heater', 'test_serial', '$2a$10$XdEvuWQlQaA5d0LOa59zpOnA/QzJxGlzsFc1EuxskHomfEUDUP4Ki', 2,
+                    1000, 'IDLE', 'NOT_CALIBRATED', 0);
         </sql>
     </changeSet>
 

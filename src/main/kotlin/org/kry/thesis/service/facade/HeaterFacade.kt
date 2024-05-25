@@ -2,10 +2,13 @@ package org.kry.thesis.service.facade
 
 import org.kry.thesis.domain.CalibrationStatus
 import org.kry.thesis.domain.Heater
+import org.kry.thesis.domain.Location
 import org.kry.thesis.domain.Model
 import org.kry.thesis.domain.ModelStatus
 import org.kry.thesis.domain.Schedule
+import org.kry.thesis.service.CountryService
 import org.kry.thesis.service.HeaterService
+import org.kry.thesis.service.LocationService
 import org.kry.thesis.service.ModelService
 import org.kry.thesis.service.StatisticsService
 import org.kry.thesis.service.UserService
@@ -14,12 +17,15 @@ import org.kry.thesis.service.metrics.MetricsService
 import org.kry.thesis.service.metrics.parseMetrics
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
+import org.springframework.http.HttpStatus
 import org.springframework.messaging.simp.SimpMessagingTemplate
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
+import org.springframework.web.server.ResponseStatusException
 import java.time.Duration
 import java.time.Instant
 
@@ -32,7 +38,10 @@ class HeaterFacade(
     private val statisticsService: StatisticsService,
     private val websocketPublisher: SimpMessagingTemplate,
     private val modelService: ModelService,
-    private val applicationEventPublisher: ApplicationEventPublisher
+    private val applicationEventPublisher: ApplicationEventPublisher,
+    private val passwordEncoder: BCryptPasswordEncoder,
+    private val locationService: LocationService,
+    private val countryService: CountryService
 ) {
     fun getCurrentUserHeaters(): List<Heater> {
         val user = userService.getCurrentUser()
@@ -55,6 +64,7 @@ class HeaterFacade(
 
         return HeaterDTO(
             id = this.id!!,
+            name = this.name,
             serial = this.serial,
             roomTemperature = metrics[ROOM_TEMPERATURE],
             outsideTemperature = metrics[OUTSIDE_TEMPERATURE],
@@ -66,8 +76,47 @@ class HeaterFacade(
             calibrationEnd = this.calibrationEnd,
             calibrationPercentage = this.calibrationPercentage,
             activeModelId = this.activeModel?.id,
-            savings = metrics[SAVINGS]
+            savings = metrics[SAVINGS],
+            country = this.location?.country?.name,
+            latitude = this.location?.latitude,
+            longitude = this.location?.longitude
         )
+    }
+
+    fun createHeater(newHeaterDTO: NewHeaterDTO) {
+        heaterService.createHeater(
+            Heater(
+                name = newHeaterDTO.serial,
+                serial = newHeaterDTO.serial,
+                passwordHash = passwordEncoder.encode(newHeaterDTO.password),
+                schedule = Schedule.IDLE,
+                calibrationStatus = CalibrationStatus.NOT_CALIBRATED,
+                power = newHeaterDTO.power,
+            )
+        )
+    }
+
+    fun addHeaterToCurrentUser(addHeaterDTO: AddHeaterDTO) {
+        val user = userService.getCurrentUser()
+        val heater = heaterService.findBySerial(addHeaterDTO.serial)
+
+        if (!passwordEncoder.matches(addHeaterDTO.password, heater.passwordHash)) {
+            throw WrongHeaterPasswordException()
+        }
+
+        val country = countryService.findById(addHeaterDTO.location.country_id)
+
+        val location = locationService.createLocation(
+            Location(
+                latitude = addHeaterDTO.location.latitude,
+                longitude = addHeaterDTO.location.longitude,
+                country = country
+            )
+        )
+
+        heater.name = addHeaterDTO.name
+        heater.owner = user
+        heater.location = location
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -133,6 +182,7 @@ class HeaterFacade(
 
 data class HeaterDTO(
     val id: Long,
+    val name: String,
     val serial: String,
     val roomTemperature: Float?,
     val outsideTemperature: Float?,
@@ -144,7 +194,29 @@ data class HeaterDTO(
     val calibrationEnd: Instant?,
     val calibrationPercentage: Float?,
     val activeModelId: Long?,
-    val savings: Float?
+    val savings: Float?,
+    val country: String?,
+    val latitude: Float?,
+    val longitude: Float?
+)
+
+data class NewHeaterDTO(
+    val serial: String,
+    val password: String,
+    val power: Float
+)
+
+data class AddHeaterDTO(
+    val name: String,
+    val serial: String,
+    val password: String,
+    val location: LocationDTO
+)
+
+data class LocationDTO(
+    val latitude: Float,
+    val longitude: Float,
+    val country_id: Long
 )
 
 data class NewModelDTO(
@@ -161,3 +233,5 @@ data class UpdateScheduleEvent(
     val serial: String,
     val lastMetricTimestamp: Instant
 )
+
+class WrongHeaterPasswordException : ResponseStatusException(HttpStatus.UNAUTHORIZED, "Heater password is incorrect")

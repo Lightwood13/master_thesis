@@ -10,4 +10,7 @@ class LocationService(
 ) {
     fun findAll(): List<Location> =
         locationRepository.findAll()
+
+    fun createLocation(location: Location): Location =
+        locationRepository.save(location)
 }

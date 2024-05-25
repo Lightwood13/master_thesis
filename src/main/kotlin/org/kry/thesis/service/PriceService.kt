@@ -19,13 +19,15 @@ class PriceService(
         val result = mutableListOf<Float>()
         var curDate = startDate
         while (curDate.isBefore(endDateInclusive.plusDays(1))) {
-            result += getPrices(country, curDate)
+            getPrices(country, curDate)?.let { prices ->
+                result += prices
+            }
             curDate = curDate.plusDays(1)
         }
         return result
     }
 
-    fun getPrices(country: Country, date: LocalDate): List<Float> {
+    fun getPrices(country: Country, date: LocalDate): List<Float>? {
         val headers = HttpHeaders().apply {
             set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
         }
@@ -52,7 +54,7 @@ class PriceService(
             entity,
             PriceResponse::class.java,
             params
-        ).body!!.multiAreaEntries.map {
+        ).body?.multiAreaEntries?.map {
             it.entryPerArea[areaCode]!!
         }
     }

@@ -15,10 +15,10 @@ class LoginVM(
     @field:Size(min = 4, max = 100)
     var password: String? = null,
 
-    var isRememberMe: Boolean? = null
+    var rememberMe: Boolean? = null
 ) {
     override fun toString() = "LoginVM{" +
         "username='" + username + '\''.toString() +
-        ", rememberMe=" + isRememberMe +
+        ", rememberMe=" + rememberMe +
         '}'.toString()
 }
