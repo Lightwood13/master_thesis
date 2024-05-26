@@ -140,11 +140,11 @@ class UserService(
             resetKey = RandomUtil.generateResetKey(),
             resetDate = Instant.now(),
             activated = true,
-            authorities = userDTO.authorities?.let { authorities ->
+            authorities = userDTO.authorities.let { authorities ->
                 authorities.map { authorityRepository.findById(it) }
                     .filter { it.isPresent }
                     .mapTo(mutableSetOf()) { it.get() }
-            } ?: mutableSetOf()
+            }
         )
         userRepository.save(user)
         clearUserCaches(user)

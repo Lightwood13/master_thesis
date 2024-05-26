@@ -18,9 +18,16 @@
             INSERT INTO location (id, latitude, longitude, country_id)
             VALUES (0, 50.4504, 30.52545, 0);
 
-            INSERT INTO heater (id, name, serial, password_hash, owner_id, power, schedule, calibration_status,
+            INSERT INTO users (id, login, password_hash, activated, created_by)
+            VALUES (3, 'test_serial', '$2a$10$XdEvuWQlQaA5d0LOa59zpOnA/QzJxGlzsFc1EuxskHomfEUDUP4Ki', true, 2);
+
+            INSERT INTO user_authority (user_id, authority_name)
+            VALUES (3, 'ROLE_HEATER');
+
+            INSERT INTO heater (id, name, serial, heater_user_id, owner_id, power, operation_type, calibration_status,
                                 location_id)
-            VALUES (0, 'Room heater', 'test_serial', '$2a$10$XdEvuWQlQaA5d0LOa59zpOnA/QzJxGlzsFc1EuxskHomfEUDUP4Ki', 2,
+            VALUES (0, 'Room heater', 'test_serial', 3,
+                    2,
                     1000, 'IDLE', 'NOT_CALIBRATED', 0);
         </sql>
     </changeSet>

@@ -89,6 +89,11 @@ class InfluxDBService(
             windowPeriod = aggregationPeriod.toInfluxPeriod(),
             windowOffset = aggregationPeriod.influxWindowOffset(),
             aggregationFunction = field.aggregationFunction(),
+            endOperation = if (field == ELECTRIC_CONSUMPTION) {
+                "difference"
+            } else {
+                null
+            },
             timeZone = timeZone
         )
 
@@ -133,6 +138,7 @@ private fun windowAggregationQuery(
     windowPeriod: String,
     windowOffset: String?,
     aggregationFunction: InfluxDBAggregationFunction,
+    endOperation: String?,
     timeZone: ZoneId?
 ): String {
     val windowOffsetParameter = when {
@@ -146,9 +152,8 @@ private fun windowAggregationQuery(
             |> filter(fn: (r) => r.$idField == "$idValue")
             |> window(every: $windowPeriod$windowOffsetParameter)
             |> ${aggregationFunction.value}()
-            |> group(columns: ["serial", "_start", "_stop"])
-            |> ${aggregationFunction.value}()
             |> group()
+            ${if (endOperation != null) "|> $endOperation()" else ""}
     """.trimIndent()
 
     return if (timeZone != null) {
@@ -179,8 +184,9 @@ private fun FluxRecord.tryExtractSerialAndValue(): Pair<String, Float>? {
 }
 
 private enum class InfluxDBAggregationFunction(val value: String) {
+    MIN("min"),
     MEAN("mean"),
-    SPREAD("spread")
+    SPREAD("min")
 }
 
 private fun StatisticsField.toMeasurement(): String =
@@ -214,7 +220,7 @@ private fun StatisticsField.toInfluxFieldName(): String =
 
 private fun StatisticsField.aggregationFunction(): InfluxDBAggregationFunction =
     when (this) {
-        ELECTRIC_CONSUMPTION -> InfluxDBAggregationFunction.SPREAD
+        ELECTRIC_CONSUMPTION -> InfluxDBAggregationFunction.MIN
         ROOM_TEMPERATURE, OUTSIDE_TEMPERATURE, ELECTRICITY_PRICE -> InfluxDBAggregationFunction.MEAN
     }
 

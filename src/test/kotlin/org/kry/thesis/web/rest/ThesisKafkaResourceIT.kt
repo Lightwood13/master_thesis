@@ -36,7 +36,7 @@ class ThesisKafkaResourceIT {
     private lateinit var restMockMvc: MockMvc
 
     @Autowired
-    @Qualifier(KafkaSseProducer.CHANNELNAME)
+    @Qualifier(KafkaSseProducer.ML_SERVICE_COMMAND_CHANNEL)
     private lateinit var output: MessageChannel
 
     @Autowired

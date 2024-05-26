@@ -26,7 +26,7 @@ import javax.validation.constraints.Size
  * A user.
  */
 @Entity
-@Table(name = "jhi_user")
+@Table(name = "users")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class User(
 
@@ -72,9 +72,9 @@ class User(
     @Column(name = "image_url", length = 256)
     var imageUrl: String? = null,
 
+    @JsonIgnore
     @field:Size(max = 20)
     @Column(name = "activation_key", length = 20)
-    @JsonIgnore
     var activationKey: String? = null,
 
     @field:Size(max = 20)
@@ -83,11 +83,11 @@ class User(
 
     @Column(name = "reset_date")
     var resetDate: Instant? = null,
-    @JsonIgnore
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
-        name = "jhi_user_authority",
+        name = "user_authority",
         joinColumns = [JoinColumn(name = "user_id", referencedColumnName = "id")],
         inverseJoinColumns = [JoinColumn(name = "authority_name", referencedColumnName = "name")]
     )

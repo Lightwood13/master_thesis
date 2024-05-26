@@ -5,7 +5,7 @@ import org.kry.thesis.domain.LatestMetrics
 import org.kry.thesis.repository.LatestMetricsRepository
 import org.kry.thesis.service.HeaterService
 import org.kry.thesis.service.facade.HeaterUpdatedEvent
-import org.kry.thesis.service.facade.UpdateScheduleEvent
+import org.kry.thesis.service.facade.MetricReceivedEvent
 import org.kry.thesis.service.influxdb.InfluxDBService
 import org.kry.thesis.service.mqtt.MQTTMessage
 import org.kry.thesis.service.mqtt.MQTTQueueService
@@ -49,7 +49,7 @@ class MetricsService(
 
         influxDBService.saveMetrics(serial, metricsWithTimestamp)
 
-        applicationEventPublisher.publishEvent(UpdateScheduleEvent(serial = heater.serial, lastMetricTimestamp = timestamp))
+        applicationEventPublisher.publishEvent(MetricReceivedEvent(serial = heater.serial, lastMetricTimestamp = timestamp))
         applicationEventPublisher.publishEvent(HeaterUpdatedEvent(heater.serial))
     }
 

@@ -6,9 +6,9 @@ import org.springframework.messaging.MessageChannel
 interface KafkaSseProducer {
 
     companion object {
-        const val CHANNELNAME = "binding-out-sse"
+        const val ML_SERVICE_COMMAND_CHANNEL = "ml-service-command-topic"
     }
 
-    @Output(CHANNELNAME)
-    fun output(): MessageChannel
+    @Output(ML_SERVICE_COMMAND_CHANNEL)
+    fun commandOutput(): MessageChannel
 }

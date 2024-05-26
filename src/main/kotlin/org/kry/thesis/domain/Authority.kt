@@ -14,7 +14,7 @@ import javax.validation.constraints.Size
  * An authority (a security role) used by Spring Security.
  */
 @Entity
-@Table(name = "jhi_authority")
+@Table(name = "authority")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 data class Authority(
 

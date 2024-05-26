@@ -12,6 +12,9 @@ import org.springframework.web.server.ResponseStatusException
 class HeaterService(
     private val heaterRepository: HeaterRepository,
 ) {
+    fun findCurrentHeater(): Heater =
+        heaterRepository.findCurrentHeater() ?: throw HeaterNotFoundException()
+
     fun findByOwnerId(ownerId: Long): List<Heater> =
         heaterRepository.findByOwnerId(ownerId)
 

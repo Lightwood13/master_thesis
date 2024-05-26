@@ -1,13 +1,10 @@
 package org.kry.thesis.domain
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
-import java.time.Instant
+import java.time.LocalDate
 import javax.persistence.Column
 import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -17,42 +14,22 @@ import javax.persistence.SequenceGenerator
 import javax.persistence.Table
 
 @Entity
-@Table(name = "model")
+@Table(name = "schedule")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-class Model(
+class Schedule(
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     val id: Long? = null,
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(nullable = false)
     val heater: Heater,
 
     @Column(nullable = false)
-    var name: String,
+    val scheduleDate: LocalDate,
 
     @Column(nullable = false)
-    val targetTemperature: Float,
-
-    @Column(nullable = false)
-    val minTemperature: Float,
-
-    @Column(nullable = false)
-    val maxTemperature: Float,
-
-    @Column(nullable = false)
-    val createdOn: Instant,
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var status: ModelStatus
+    var data: String
 )
-
-enum class ModelStatus {
-    Created,
-    Training,
-    Trained
-}

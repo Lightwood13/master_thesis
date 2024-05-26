@@ -67,11 +67,13 @@ const ModelTable = () => {
       dispatch(
         createNewModel({
           serial: heater.serial,
-          name: newModel.modelName,
-          targetTemperature: parseFloat(newModel.targetTemperature),
-          minTemperature: parseFloat(newModel.minTemperature),
-          maxTemperature: parseFloat(newModel.maxTemperature),
-          activateImmediately: newModel.activateImmediately,
+          data: {
+            name: newModel.modelName,
+            targetTemperature: parseFloat(newModel.targetTemperature),
+            minTemperature: parseFloat(newModel.minTemperature),
+            maxTemperature: parseFloat(newModel.maxTemperature),
+            activateImmediately: newModel.activateImmediately,
+          },
         })
       );
     }

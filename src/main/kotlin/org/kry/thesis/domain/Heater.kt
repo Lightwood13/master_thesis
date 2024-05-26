@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.Instant
+import java.time.LocalDate
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
@@ -12,6 +13,7 @@ import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
@@ -34,23 +36,25 @@ class Heater(
     @Column(name = "serial", nullable = false, unique = true)
     var serial: String,
 
-    @Column(name = "password_hash", nullable = false)
-    val passwordHash: String,
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(nullable = false, unique = true)
+    val heaterUser: User,
 
     @Column(name = "power", nullable = false)
     val power: Float,
 
-    @ManyToOne
     @JsonIgnore
+    @ManyToOne
     var owner: User? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "schedule", nullable = false)
-    var schedule: Schedule,
+    @Column(name = "operation_type", nullable = false)
+    var operationType: OperationType = OperationType.IDLE,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "calibration_status", nullable = false)
-    var calibrationStatus: CalibrationStatus,
+    var calibrationStatus: CalibrationStatus = CalibrationStatus.NOT_CALIBRATED,
 
     @Column(name = "calibration_start")
     var calibrationStart: Instant? = null,
@@ -68,10 +72,16 @@ class Heater(
     var models: MutableList<Model> = mutableListOf(),
 
     @OneToOne
-    var location: Location? = null
+    var location: Location? = null,
+
+    @OneToMany(mappedBy = "heater")
+    var schedules: MutableList<Schedule> = mutableListOf(),
+
+    @Column
+    var lastValidScheduleDate: LocalDate? = null
 )
 
-enum class Schedule {
+enum class OperationType {
     IDLE,
     CALIBRATING,
     MODEL

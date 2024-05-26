@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet author="viktor" id="5-1">
+        <createTable tableName="schedule">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="schedule_pkey"/>
+            </column>
+            <column name="heater_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="schedule_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="heater_id"
+            baseTableName="schedule"
+            constraintName="fk_schedule_heater_id"
+            referencedColumnNames="id"
+            referencedTableName="heater"
+            onDelete="CASCADE"
+        />
+    </changeSet>
+
+</databaseChangeLog>

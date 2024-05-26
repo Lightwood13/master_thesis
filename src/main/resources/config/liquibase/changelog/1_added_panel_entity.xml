@@ -17,8 +17,8 @@
             <column name="serial" type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="password_hash" type="VARCHAR(255)">
-                <constraints nullable="false"/>
+            <column name="heater_user_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="owner_id" type="BIGINT">
                 <constraints nullable="true"/>
@@ -26,7 +26,7 @@
             <column name="power" type="REAL">
                 <constraints nullable="true"/>
             </column>
-            <column name="schedule" type="VARCHAR(255)">
+            <column name="operation_type" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="calibration_status" type="VARCHAR(255)">
@@ -36,14 +36,24 @@
             <column name="calibration_end" type="timestamptz"/>
             <column name="calibration_percentage" type="REAL"/>
             <column name="active_model_id" type="BIGINT"/>
+            <column name="last_valid_schedule_date" type="date"/>
         </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="heater_user_id"
+            baseTableName="heater"
+            constraintName="fk_heater_user_id"
+            referencedColumnNames="id"
+            referencedTableName="users"
+            onDelete="RESTRICT"
+        />
 
         <addForeignKeyConstraint
             baseColumnNames="owner_id"
             baseTableName="heater"
             constraintName="fk_heater_owner_id"
             referencedColumnNames="id"
-            referencedTableName="jhi_user"
+            referencedTableName="users"
             onDelete="SET NULL"
         />
     </changeSet>

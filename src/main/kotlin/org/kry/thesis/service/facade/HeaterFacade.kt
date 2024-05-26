@@ -5,13 +5,19 @@ import org.kry.thesis.domain.Heater
 import org.kry.thesis.domain.Location
 import org.kry.thesis.domain.Model
 import org.kry.thesis.domain.ModelStatus
+import org.kry.thesis.domain.OperationType
 import org.kry.thesis.domain.Schedule
+import org.kry.thesis.service.CalculateScheduleCommand
 import org.kry.thesis.service.CountryService
+import org.kry.thesis.service.CreateModelCommand
 import org.kry.thesis.service.HeaterService
+import org.kry.thesis.service.KafkaService
 import org.kry.thesis.service.LocationService
 import org.kry.thesis.service.ModelService
+import org.kry.thesis.service.ScheduleService
 import org.kry.thesis.service.StatisticsService
 import org.kry.thesis.service.UserService
+import org.kry.thesis.service.dto.AdminUserDTO
 import org.kry.thesis.service.metrics.HeaterMetric.*
 import org.kry.thesis.service.metrics.MetricsService
 import org.kry.thesis.service.metrics.parseMetrics
@@ -28,6 +34,8 @@ import org.springframework.transaction.event.TransactionalEventListener
 import org.springframework.web.server.ResponseStatusException
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Component
 @Transactional
@@ -41,7 +49,9 @@ class HeaterFacade(
     private val applicationEventPublisher: ApplicationEventPublisher,
     private val passwordEncoder: BCryptPasswordEncoder,
     private val locationService: LocationService,
-    private val countryService: CountryService
+    private val countryService: CountryService,
+    private val kafkaService: KafkaService,
+    private val scheduleService: ScheduleService
 ) {
     fun getCurrentUserHeaters(): List<Heater> {
         val user = userService.getCurrentUser()
@@ -58,6 +68,9 @@ class HeaterFacade(
         return heater.toHeaterDTO()
     }
 
+    fun getCurrentHeater(): HeaterDTO =
+        heaterService.findCurrentHeater().toHeaterDTO()
+
     private fun Heater.toHeaterDTO(): HeaterDTO {
         val metrics = metricsService.findLatestMetrics(this)?.metrics?.let { parseMetrics(it) } ?: emptyMap()
         val lastWeekConsumption = statisticsService.calculateLastWeekConsumption(this)
@@ -70,7 +83,7 @@ class HeaterFacade(
             outsideTemperature = metrics[OUTSIDE_TEMPERATURE],
             heaterPower = this.power,
             weekConsumption = lastWeekConsumption,
-            schedule = this.schedule,
+            operationType = this.operationType,
             calibrationStatus = this.calibrationStatus,
             calibrationStart = this.calibrationStart,
             calibrationEnd = this.calibrationEnd,
@@ -84,14 +97,21 @@ class HeaterFacade(
     }
 
     fun createHeater(newHeaterDTO: NewHeaterDTO) {
+        val encodedPassword = passwordEncoder.encode(newHeaterDTO.password)
+        val user = userService.createUser(
+            AdminUserDTO(
+                login = newHeaterDTO.serial,
+                authorities = mutableSetOf("ROLE_HEATER")
+            )
+        )
+
+        user.password = encodedPassword
         heaterService.createHeater(
             Heater(
                 name = newHeaterDTO.serial,
                 serial = newHeaterDTO.serial,
-                passwordHash = passwordEncoder.encode(newHeaterDTO.password),
-                schedule = Schedule.IDLE,
-                calibrationStatus = CalibrationStatus.NOT_CALIBRATED,
                 power = newHeaterDTO.power,
+                heaterUser = user
             )
         )
     }
@@ -100,7 +120,7 @@ class HeaterFacade(
         val user = userService.getCurrentUser()
         val heater = heaterService.findBySerial(addHeaterDTO.serial)
 
-        if (!passwordEncoder.matches(addHeaterDTO.password, heater.passwordHash)) {
+        if (!passwordEncoder.matches(addHeaterDTO.password, heater.heaterUser.password)) {
             throw WrongHeaterPasswordException()
         }
 
@@ -117,6 +137,11 @@ class HeaterFacade(
         heater.name = addHeaterDTO.name
         heater.owner = user
         heater.location = location
+    }
+
+    fun getScheduleForCurrentHeater(date: LocalDate): Schedule? {
+        val heater = heaterService.findCurrentHeater()
+        return scheduleService.findByHeaterAndScheduleDate(heater, date)
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -137,33 +162,74 @@ class HeaterFacade(
         heater.calibrationStart = metricsService.findLatestMetrics(heater)!!.timestamp
         heater.calibrationEnd = heater.calibrationStart!! + Duration.ofHours(78)
         heater.calibrationPercentage = 0f
-        heater.schedule = Schedule.CALIBRATING
+        heater.operationType = OperationType.CALIBRATING
 
         publishHeaterUpdate(HeaterUpdatedEvent(heater.serial))
     }
 
     @EventListener
-    fun updateSchedule(event: UpdateScheduleEvent) {
+    fun onMetricReceived(event: MetricReceivedEvent) {
         val heater = heaterService.findBySerial(event.serial)
+
+        updateCalibrationStatus(heater, event.lastMetricTimestamp)
+        updateSchedules(heater, event.lastMetricTimestamp)
+    }
+
+    fun updateCalibrationStatus(heater: Heater, lastMetricTimestamp: Instant) {
         if (heater.calibrationStatus == CalibrationStatus.CALIBRATION_IN_PROGRESS) {
-            if (event.lastMetricTimestamp > heater.calibrationEnd!!) {
+            if (lastMetricTimestamp > heater.calibrationEnd!!) {
                 heater.calibrationStatus = CalibrationStatus.CALIBRATED
                 heater.calibrationPercentage = 100f
-                heater.schedule = Schedule.IDLE
+                heater.operationType = OperationType.IDLE
                 return
             }
 
             heater.calibrationPercentage =
-                Duration.between(heater.calibrationStart!!, event.lastMetricTimestamp).seconds.toFloat() /
+                Duration.between(heater.calibrationStart!!, lastMetricTimestamp).seconds.toFloat() /
                 Duration.between(heater.calibrationStart!!, heater.calibrationEnd!!).seconds
-        } else if (heater.calibrationStatus == CalibrationStatus.CALIBRATED) {
-            if (heater.activeModel?.status == ModelStatus.Training &&
-                Duration.between(heater.activeModel!!.createdOn, event.lastMetricTimestamp) >= Duration.ofHours(10)
-            ) {
-                heater.activeModel!!.status = ModelStatus.Working
-                heater.schedule = Schedule.MODEL
+        }
+    }
+
+    fun updateSchedules(heater: Heater, lastMetricTimestamp: Instant) {
+        if (heater.operationType != OperationType.MODEL) {
+            return
+        }
+
+        val locationLastUpdated = heater.location?.lastUpdated
+        val countryLastUpdated = heater.location?.country?.lastUpdated
+        if (locationLastUpdated != null && countryLastUpdated != null) {
+            val dataAvailableUntil = maxOf(locationLastUpdated, countryLastUpdated)
+            val lastValidScheduleDate = heater.lastValidScheduleDate
+            if (lastValidScheduleDate == null || lastValidScheduleDate < dataAvailableUntil) {
+                val currentDate =
+                    lastMetricTimestamp.atZone(ZoneId.of(heater.location?.country?.timezone)).toLocalDate()
+
+                var date = if (lastValidScheduleDate == null) {
+                    currentDate
+                } else {
+                    maxOf(currentDate, lastValidScheduleDate.plusDays(1))
+                }
+
+                while (date <= dataAvailableUntil) {
+                    calculateSchedule(heater.activeModel!!, date, heater.location!!.country.timezone)
+                    date = date.plusDays(1)
+                }
             }
         }
+    }
+
+    fun calculateSchedule(model: Model, date: LocalDate, timezone: String) {
+        if (model.status != ModelStatus.Trained) {
+            return
+        }
+
+        kafkaService.sendMLServiceCommand(
+            CalculateScheduleCommand(
+                modelId = model.id!!,
+                date = date,
+                timezone = timezone
+            )
+        )
     }
 
     fun getHeaterModels(serial: String): List<Model> =
@@ -176,7 +242,54 @@ class HeaterFacade(
         if (newModelDTO.activateImmediately) {
             heater.activeModel = model
         }
+
+        kafkaService.sendMLServiceCommand(
+            CreateModelCommand(
+                modelId = model.id!!,
+                serial = heater.serial,
+                targetTemperature = newModelDTO.targetTemperature,
+                minTemperature = newModelDTO.minTemperature,
+                maxTemperature = newModelDTO.maxTemperature,
+                calibrationDataStart = heater.calibrationStart!!,
+                calibrationDataEnd = heater.calibrationEnd!!
+            )
+        )
+
         applicationEventPublisher.publishEvent(HeaterUpdatedEvent(serial))
+    }
+
+    @EventListener
+    fun modelTrainingFinished(event: ModelTrainingFinishedEvent) {
+        val model = modelService.findById(event.modelId)
+
+        if (model.heater.activeModel == model) {
+            applicationEventPublisher.publishEvent(HeaterUpdatedEvent(model.heater.serial))
+            model.heater.operationType = OperationType.MODEL
+        }
+
+        model.status = ModelStatus.Trained
+    }
+
+    @EventListener
+    fun scheduleCalculated(event: ScheduleCalculatedEvent) {
+        val model = modelService.findById(event.modelId)
+        val heater = model.heater
+
+        if (heater.activeModel != model) {
+            return
+        }
+
+        val schedule = scheduleService.findByHeaterAndScheduleDate(heater, event.date)
+            ?: Schedule(heater = heater, scheduleDate = event.date, data = event.schedule)
+        schedule.data = event.schedule
+        val lastValidScheduleDate = heater.lastValidScheduleDate
+        heater.lastValidScheduleDate = if (lastValidScheduleDate == null) {
+            schedule.scheduleDate
+        } else {
+            maxOf(lastValidScheduleDate, schedule.scheduleDate)
+        }
+
+        scheduleService.save(schedule)
     }
 }
 
@@ -188,7 +301,7 @@ data class HeaterDTO(
     val outsideTemperature: Float?,
     val heaterPower: Float,
     val weekConsumption: Float?,
-    val schedule: Schedule,
+    val operationType: OperationType,
     val calibrationStatus: CalibrationStatus,
     val calibrationStart: Instant?,
     val calibrationEnd: Instant?,
@@ -229,9 +342,17 @@ data class NewModelDTO(
 
 data class HeaterUpdatedEvent(val serial: String)
 
-data class UpdateScheduleEvent(
+data class MetricReceivedEvent(
     val serial: String,
     val lastMetricTimestamp: Instant
+)
+
+data class ModelTrainingFinishedEvent(val modelId: Long)
+
+data class ScheduleCalculatedEvent(
+    val modelId: Long,
+    val date: LocalDate,
+    val schedule: String
 )
 
 class WrongHeaterPasswordException : ResponseStatusException(HttpStatus.UNAUTHORIZED, "Heater password is incorrect")

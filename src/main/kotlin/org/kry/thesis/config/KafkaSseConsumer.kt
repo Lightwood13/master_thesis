@@ -6,9 +6,9 @@ import org.springframework.messaging.MessageChannel
 interface KafkaSseConsumer {
 
     companion object {
-        const val CHANNELNAME = "binding-in-sse"
+        const val ML_SERVICE_RESPONSE_CHANNEL = "ml-service-response-topic"
     }
 
-    @Input(CHANNELNAME)
+    @Input(ML_SERVICE_RESPONSE_CHANNEL)
     fun input(): MessageChannel
 }

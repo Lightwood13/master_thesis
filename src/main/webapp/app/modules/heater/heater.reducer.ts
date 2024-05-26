@@ -31,7 +31,7 @@ export type Heater = {
   outsideTemperature: number | null;
   heaterPower: number | null;
   weekConsumption: number | null;
-  schedule: string;
+  operationType: string;
   calibrationStatus: string;
   calibrationStart: DateTime | null;
   calibrationEnd: DateTime | null;
@@ -51,7 +51,6 @@ export type Model = {
 };
 
 export type NewModelDTO = {
-  serial: string;
   name: string;
   targetTemperature: number;
   minTemperature: number;
@@ -100,8 +99,8 @@ export const startCalibration = createAsyncThunk('heater.start_calibration', asy
   axios.post(heaterUrl(serial) + '/start-calibration')
 );
 
-export const createNewModel = createAsyncThunk('heater.create_new_model', async (data: NewModelDTO) =>
-  axios.post(heaterUrl(data.serial) + '/models', data)
+export const createNewModel = createAsyncThunk('heater.create_new_model', async ({ serial, data }: { serial: string; data: NewModelDTO }) =>
+  axios.post(heaterUrl(serial) + '/models', data)
 );
 
 export const updateHeater =
