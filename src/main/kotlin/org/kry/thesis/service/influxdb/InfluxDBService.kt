@@ -186,7 +186,7 @@ private fun FluxRecord.tryExtractSerialAndValue(): Pair<String, Float>? {
 private enum class InfluxDBAggregationFunction(val value: String) {
     MIN("min"),
     MEAN("mean"),
-    SPREAD("min")
+    SPREAD("spread")
 }
 
 private fun StatisticsField.toMeasurement(): String =

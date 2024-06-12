@@ -4,10 +4,7 @@ import org.kry.thesis.domain.Heater
 import org.kry.thesis.service.influxdb.InfluxDBService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.*
 
 @Service
 class StatisticsService(

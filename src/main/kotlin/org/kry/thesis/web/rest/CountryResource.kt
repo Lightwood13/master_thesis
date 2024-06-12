@@ -1,10 +1,8 @@
-package org.kry.thesis.web
+package org.kry.thesis.web.rest
 
 import org.kry.thesis.domain.Country
 import org.kry.thesis.service.CountryService
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/countries")

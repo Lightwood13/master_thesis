@@ -1,23 +1,17 @@
 package org.kry.thesis.service
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.kry.thesis.config.KafkaSseConsumer
-import org.kry.thesis.config.KafkaSseProducer
-import org.kry.thesis.service.facade.ModelTrainingFinishedEvent
-import org.kry.thesis.service.facade.ScheduleCalculatedEvent
+import org.kry.thesis.config.*
+import org.kry.thesis.service.facade.*
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cloud.stream.annotation.StreamListener
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.messaging.Message
-import org.springframework.messaging.MessageChannel
-import org.springframework.messaging.MessageHeaders
+import org.springframework.messaging.*
 import org.springframework.messaging.support.GenericMessage
 import org.springframework.stereotype.Service
 import org.springframework.util.MimeTypeUtils
-import java.time.Instant
-import java.time.LocalDate
+import java.time.*
 
 @Service
 class KafkaService(

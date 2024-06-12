@@ -1,20 +1,10 @@
 package org.kry.thesis.web.rest
 
-import org.kry.thesis.domain.Heater
-import org.kry.thesis.domain.Model
+import org.kry.thesis.domain.*
 import org.kry.thesis.security.ADMIN
-import org.kry.thesis.service.facade.AddHeaterDTO
-import org.kry.thesis.service.facade.HeaterDTO
-import org.kry.thesis.service.facade.HeaterFacade
-import org.kry.thesis.service.facade.NewHeaterDTO
-import org.kry.thesis.service.facade.NewModelDTO
+import org.kry.thesis.service.facade.*
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/heaters")

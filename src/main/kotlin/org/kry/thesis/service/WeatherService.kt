@@ -1,16 +1,11 @@
 package org.kry.thesis.service
 
 import org.kry.thesis.domain.Location
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
+import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
